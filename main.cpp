@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <locale.h>
 
-const int SMALLER = -1;
-const int BIGGER  =  1;
+const int SMALLER = -1;                                              // means first string is lexicografically smaller than second
+const int BIGGER  =  1;                                              // means first string is lexicografically bigger  than second
 struct String
 {
     char *str;
@@ -20,14 +20,14 @@ struct Text
     size_t file_size;
 };
 
-void TextInput(FILE *file, struct Text *input_text);
+void TextInput(FILE *file, Text *input_text);
 char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size);
 size_t GetFileSize(FILE *file);
 struct String *PlacePointers(char *buffer, size_t lines_number);
 void Swap(void *value_1, void *value_2, size_t type_size);
 void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *));
-void PrintText(FILE *file, struct Text *input_text);
-void PrintBuffer(FILE *file, struct Text *input_text);
+void PrintText(FILE *file, Text *input_text);
+void PrintBuffer(FILE *file, Text *input_text);
 int DirectComparator(const void *first_string, const void *second_string);
 int ReverseComparator(const void *first_string, const void *second_string);
 void FreeMemory(struct Text *input_text);
@@ -48,9 +48,9 @@ int main(int argc, const char *argv[])
 
     TextInput(input, &input_text);
     fclose(input);
-    printf("%d\n", __LINE__);
+
     qsort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
-    printf("%d\n", __LINE__);
+    //QuickSort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
     FILE *output = fopen("Text_sorted.txt", "w");
     assert(output != nullptr);
 
@@ -58,16 +58,16 @@ int main(int argc, const char *argv[])
     PrintText(output, &input_text);
     fclose(output);
 
-    //QuickSort(&input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
+    //QuickSort(&input_text.lines, input_text.lines_number, sizeof(struct String), ReverseComparator);
     qsort(input_text.lines, input_text.lines_number, sizeof(struct String), ReverseComparator);
-    printf("%d\n", __LINE__);
+
     output = fopen("Text_sorted.txt", "a");
     assert(output != nullptr);
 
     fprintf(output, "\nReverse sorted text\n\n");
     PrintText(output, &input_text);
 
-    fprintf(output, "\n Original text\n\n");
+    fprintf(output, "\nOriginal text\n\n");
     PrintBuffer(output, &input_text);
     fclose(output);
 
@@ -76,13 +76,12 @@ int main(int argc, const char *argv[])
     return 0;
 }
 
-void TextInput(FILE *file, struct Text *input_text)
+void TextInput(FILE *file, Text *input_text)
 {
     assert (file != nullptr);
     assert (input_text != nullptr);
 
     input_text->buffer = CreateBuffer(file, &input_text->lines_number, &input_text->file_size);
-    printf("%d\n", __LINE__);
     input_text->lines = PlacePointers(input_text->buffer, input_text->lines_number);
 }
 
@@ -107,7 +106,7 @@ char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size)
 
     size_t string_counter = 0;
 
-    for (size_t checking_strings; checking_strings < *file_size; ++checking_strings)
+    for (size_t checking_strings = 0; checking_strings < *file_size; ++checking_strings)
     {
         if (*(buffer + checking_strings) == '\n')
         {
@@ -116,12 +115,9 @@ char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size)
 
     }
 
-    *file_size -= string_counter;
-
     string_counter++;
-
+    *file_size -= string_counter;
     *lines_number = string_counter;
-
     *(buffer + *file_size) = '\0';
 
     return buffer;
@@ -157,14 +153,14 @@ struct String *PlacePointers(char *buffer, size_t lines_number)
     return strings;
 }
 
-int DirectComparator (const void *first_string, const void *second_string)
+int DirectComparator(const void *first_string, const void *second_string)
 {
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
 
     char *first_string_begin  = (((struct String *) first_string) ->str);
     char *second_string_begin = (((struct String *) second_string)->str);
-
+    //printf("Looking for %d %d\n", ((struct String *) first_string)->len, ((struct String *) second_string)->len);
     while (((*first_string_begin)  < 'À') && (*first_string_begin  != '\n'))
     {
         ++first_string_begin;
@@ -194,45 +190,45 @@ int DirectComparator (const void *first_string, const void *second_string)
     return (((int) *first_string_begin) - ((int) *second_string_begin));
 }
 
-int ReverseComparator (const void *first_string, const void *second_string)
+int ReverseComparator(const void *first_string, const void *second_string)
 {
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
 
-    char *first_string_begin  = (((struct String*) first_string) ->str);
-    char *first_string_end    = (((struct String*) first_string) ->str) + (((struct String*) first_string) ->len) - 1;
-    char *second_string_begin = (((struct String*) second_string)->str);
-    char *second_string_end   = (((struct String*) second_string)->str) + (((struct String*) second_string)->len) - 1;
-
-    while (((*first_string_end)  < 'À') && (*first_string_end  != *first_string_begin))
+    char *first_string_begin  = (((struct String *) first_string) ->str);
+    char *first_string_end    = (((struct String *) first_string) ->str) + (((struct String *) first_string) ->len) - 1;
+    char *second_string_begin = (((struct String *) second_string)->str);
+    char *second_string_end   = (((struct String *) second_string)->str) + (((struct String *) second_string)->len) - 1;
+    //printf("Looking for %d %d\n", ((struct String *) first_string)->len, ((struct String *) second_string)->len);
+    while (((*first_string_end)  < 'À') && (first_string_end  != first_string_begin))
     {
         --first_string_end;
     }
 
-    while (((*second_string_end) < 'À') && (*second_string_end != *second_string_begin))
+    while (((*second_string_end) < 'À') && (second_string_end != second_string_begin))
     {
         --second_string_end;
     }
 
-    while ((*first_string_end == *second_string_end) && (*first_string_end != *first_string_begin) && (*second_string_end != *second_string_begin))
+    while ((*first_string_end == *second_string_end) && (first_string_end != first_string_begin) && (second_string_end != second_string_begin))
     {
         --first_string_end;
         --second_string_end;
 
-        while (((*first_string_end)  < 'À') && (*first_string_end  != *first_string_begin))
+        while (((*first_string_end)  < 'À') && (first_string_end  != first_string_begin))
         {
             --first_string_end;
         }
 
-        while (((*second_string_end) < 'À') && (*second_string_end != *second_string_begin))
+        while (((*second_string_end) < 'À') && (second_string_end != second_string_begin))
         {
             --second_string_end;
         }
     }
 
-    if (*first_string_end == *first_string_begin)
+    if (first_string_end == first_string_begin)
     {
-        if (*second_string_end != *second_string_begin)
+        if (second_string_end != second_string_begin)
         {
             return SMALLER;
         }
@@ -254,10 +250,10 @@ int ReverseComparator (const void *first_string, const void *second_string)
         return BIGGER;
     }
 
-    if (*first_string_end != *second_string_end)
+    /*if (*first_string_end != *second_string_end)
     {
         return (((int) *first_string_end) - ((int) *second_string_end));
-    }
+    }*/
 
     return (((int) *first_string_end) - ((int) *second_string_end));
 }
@@ -298,7 +294,7 @@ void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparat
     size_t left = 0;
     size_t right = lines_number - 1;
     size_t middle_element_displacement = type_size * lines_number / 2;
-    printf("%d\n", __LINE__);
+
     while (left <= right)
     {
 
@@ -306,14 +302,11 @@ void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparat
         while (comparator(((char *) data + type_size * left),  ((char *) data + middle_element_displacement)) < 0)
         {
             ++left;
-            printf("Left = %d, lines_number = %zy\n", left, lines_number);
         }
         printf("%d\n", __LINE__);
         while (comparator(((char *) data + type_size * right), ((char *) data + middle_element_displacement)) > 0)
         {
             --right;
-            printf("Right = %d, lines_number = %d\n", right, lines_number);
-
         }
         printf("%d\n", __LINE__);
         if (left <= right)
@@ -337,7 +330,7 @@ void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparat
 
 }
 
-void PrintText(FILE *file, struct Text *input_text)
+void PrintText(FILE *file, Text *input_text)
 {
     assert(file != nullptr);
     assert(input_text != nullptr);
@@ -351,7 +344,7 @@ void PrintText(FILE *file, struct Text *input_text)
     }
 }
 
-void PrintBuffer(FILE *file, struct Text *input_text)
+void PrintBuffer(FILE *file, Text *input_text)
 {
     assert(file != nullptr);
     assert(input_text != nullptr);
