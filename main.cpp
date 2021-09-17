@@ -25,6 +25,7 @@ char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size);
 size_t GetFileSize(FILE *file);
 struct String *PlacePointers(char *buffer, size_t lines_number);
 void Swap(void *value_1, void *value_2, size_t type_size);
+bool IsCyrillic (char letter);
 void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *));
 void PrintText(FILE *file, Text *input_text);
 void PrintBuffer(FILE *file, Text *input_text);
@@ -48,8 +49,9 @@ int main(int argc, const char *argv[])
 
     TextInput(input, &input_text);
     fclose(input);
-
+    printf("%d\n", __LINE__);
     qsort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
+    printf("%d\n", __LINE__);
     //QuickSort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
     FILE *output = fopen("Text_sorted.txt", "w");
     assert(output != nullptr);
@@ -157,17 +159,17 @@ int DirectComparator(const void *first_string, const void *second_string)
 {
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
-
     char *first_string_begin  = (((struct String *) first_string) ->str);
     char *second_string_begin = (((struct String *) second_string)->str);
-    //printf("Looking for %d %d\n", ((struct String *) first_string)->len, ((struct String *) second_string)->len);
-    while (((*first_string_begin)  < 'À') && (*first_string_begin  != '\n'))
+
+    while (!IsCyrillic(*first_string_begin)  && !isalpha(*first_string_begin)  && (*first_string_begin  != '\n'))
     {
         ++first_string_begin;
     }
 
-    while (((*second_string_begin) < 'À') && (*second_string_begin != '\n'))
+    while (!IsCyrillic(*second_string_begin) && !isalpha(*second_string_begin) && (*second_string_begin != '\n'))
     {
+
         ++second_string_begin;
     }
 
@@ -176,12 +178,12 @@ int DirectComparator(const void *first_string, const void *second_string)
         ++first_string_begin;
         ++second_string_begin;
 
-        while (((*first_string_begin)  < 'À') && (*first_string_begin  != '\n'))
+        while (!IsCyrillic(*first_string_begin)  && !isalpha(*first_string_begin)  && (*first_string_begin  != '\n'))
         {
             ++first_string_begin;
         }
 
-        while (((*second_string_begin) < 'À') && (*second_string_begin != '\n'))
+        while (!IsCyrillic(*second_string_begin) && !isalpha(*second_string_begin) && (*second_string_begin != '\n'))
         {
             ++second_string_begin;
         }
@@ -199,13 +201,13 @@ int ReverseComparator(const void *first_string, const void *second_string)
     char *first_string_end    = (((struct String *) first_string) ->str) + (((struct String *) first_string) ->len) - 1;
     char *second_string_begin = (((struct String *) second_string)->str);
     char *second_string_end   = (((struct String *) second_string)->str) + (((struct String *) second_string)->len) - 1;
-    //printf("Looking for %d %d\n", ((struct String *) first_string)->len, ((struct String *) second_string)->len);
-    while (((*first_string_end)  < 'À') && (first_string_end  != first_string_begin))
+
+    while (!IsCyrillic(*first_string_end)  && !isalpha(*first_string_end)  && (first_string_end  != first_string_begin))
     {
         --first_string_end;
     }
 
-    while (((*second_string_end) < 'À') && (second_string_end != second_string_begin))
+    while (!IsCyrillic(*second_string_end) && !isalpha(*second_string_end) && (second_string_end != second_string_begin))
     {
         --second_string_end;
     }
@@ -215,12 +217,12 @@ int ReverseComparator(const void *first_string, const void *second_string)
         --first_string_end;
         --second_string_end;
 
-        while (((*first_string_end)  < 'À') && (first_string_end  != first_string_begin))
+        while (!IsCyrillic(*first_string_end)  && !isalpha(*first_string_end)  && (first_string_end  != first_string_begin))
         {
             --first_string_end;
         }
 
-        while (((*second_string_end) < 'À') && (second_string_end != second_string_begin))
+        while (!IsCyrillic(*second_string_end) && !isalpha(*second_string_end) && (second_string_end != second_string_begin))
         {
             --second_string_end;
         }
@@ -249,11 +251,6 @@ int ReverseComparator(const void *first_string, const void *second_string)
     {
         return BIGGER;
     }
-
-    /*if (*first_string_end != *second_string_end)
-    {
-        return (((int) *first_string_end) - ((int) *second_string_end));
-    }*/
 
     return (((int) *first_string_end) - ((int) *second_string_end));
 }
@@ -284,6 +281,11 @@ void Swap(void *value_1, void *value_2, size_t type_size)
             *((char *) value_2 + counter + element) = byte;
         }
     }
+}
+
+bool IsCyrillic(char letter)
+{
+    return ((letter >= 'À') && (letter <= 'ÿ'));
 }
 
 void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *))
@@ -325,7 +327,7 @@ void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparat
 
     if (left < lines_number)
     {
-        QuickSort(((char *) data + left), lines_number - left, type_size, comparator);
+        QuickSort(((char *) data + type_size * left), lines_number - left, type_size, comparator);
     }
 
 }
