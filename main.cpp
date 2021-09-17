@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <locale.h>
 
-const int SMALLER = -1;                                              // means first string is lexicografically smaller than second
-const int BIGGER  =  1;                                              // means first string is lexicografically bigger  than second
+const int SMALLER   = -1;                                              // means first string is lexicografically smaller than second
+const int BIGGER    =  1;                                              // means first string is lexicografically bigger  than second
+const char FILE_1[] = "Onegin.txt";
+
 struct String
 {
     char *str;
@@ -20,38 +22,32 @@ struct Text
     size_t file_size;
 };
 
-void TextInput(FILE *file, Text *input_text);
+int TextInput(Text *input_text);
 char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size);
 size_t GetFileSize(FILE *file);
 struct String *PlacePointers(char *buffer, size_t lines_number);
 void Swap(void *value_1, void *value_2, size_t type_size);
-bool IsCyrillic (char letter);
+bool IsCyrillic(char letter);
 void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *));
 void PrintText(FILE *file, Text *input_text);
 void PrintBuffer(FILE *file, Text *input_text);
 int DirectComparator(const void *first_string, const void *second_string);
 int ReverseComparator(const void *first_string, const void *second_string);
-void FreeMemory(struct Text *input_text);
+void FreeMemory(Text *input_text);
 
 int main(int argc, const char *argv[])
 {
     setlocale(LC_ALL, "ru_RU.cp1251");
 
-    FILE *input = fopen("Onegin.txt", "r");
-    if(input == nullptr)
-    {
-         printf("ERROR, the file was not found");
+    struct Text input_text = {0};
 
-         return -1;
+    if (TextInput(&input_text) == -1)
+    {
+        return -1;
     }
 
-    struct Text input_text;
+    qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
 
-    TextInput(input, &input_text);
-    fclose(input);
-    printf("%d\n", __LINE__);
-    qsort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
-    printf("%d\n", __LINE__);
     //QuickSort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
     FILE *output = fopen("Text_sorted.txt", "w");
     assert(output != nullptr);
@@ -78,13 +74,23 @@ int main(int argc, const char *argv[])
     return 0;
 }
 
-void TextInput(FILE *file, Text *input_text)
+int TextInput(Text *input_text)
 {
-    assert (file != nullptr);
     assert (input_text != nullptr);
 
-    input_text->buffer = CreateBuffer(file, &input_text->lines_number, &input_text->file_size);
+    FILE *input_from_file = fopen(FILE_1, "r");
+
+    if (input_from_file == nullptr)
+    {
+        printf("ERROR: file was not found");
+        return -1;
+    }
+    input_text->buffer = CreateBuffer(input_from_file, &input_text->lines_number, &input_text->file_size);
     input_text->lines = PlacePointers(input_text->buffer, input_text->lines_number);
+
+    fclose(input_from_file);
+
+    return 0;
 }
 
 size_t GetFileSize(FILE *file)
@@ -104,17 +110,16 @@ char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size)
 
     char *buffer = (char*) calloc(*file_size, sizeof(char));
 
-    fread(buffer, sizeof(char), *file_size, file);
+    *file_size = fread(buffer, sizeof(char), *file_size, file);
 
     size_t string_counter = 0;
 
     for (size_t checking_strings = 0; checking_strings < *file_size; ++checking_strings)
     {
-        if (*(buffer + checking_strings) == '\n')
+        if ((buffer[checking_strings]) == '\n')
         {
             ++string_counter;
         }
-
     }
 
     string_counter++;
@@ -125,7 +130,7 @@ char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size)
     return buffer;
 }
 
-struct String *PlacePointers(char *buffer, size_t lines_number)
+String *PlacePointers(char *buffer, size_t lines_number)
 {
     assert(buffer != nullptr);
 
@@ -135,6 +140,8 @@ struct String *PlacePointers(char *buffer, size_t lines_number)
     char *pointer_end = buffer;
     size_t counter = 0;
 
+
+    for (char *pointer_begin = buffer - 1; *pointer_begin != '\0'; ++pointer_begin)
     while (*pointer_begin != '\0')
     {
         ++pointer_begin;
@@ -143,8 +150,9 @@ struct String *PlacePointers(char *buffer, size_t lines_number)
         {
             ++pointer_begin;
         }
+
         (strings + counter)->str = pointer_end;
-        (strings + counter)->len = pointer_begin - pointer_end;
+        strings[counter].len = pointer_begin - pointer_end;
 
         ++counter;
         pointer_end = pointer_begin + 1;
@@ -159,6 +167,7 @@ int DirectComparator(const void *first_string, const void *second_string)
 {
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
+
     char *first_string_begin  = (((struct String *) first_string) ->str);
     char *second_string_begin = (((struct String *) second_string)->str);
 
@@ -186,10 +195,10 @@ int DirectComparator(const void *first_string, const void *second_string)
         while (!IsCyrillic(*second_string_begin) && !isalpha(*second_string_begin) && (*second_string_begin != '\n'))
         {
             ++second_string_begin;
-        }
+        }                    //tolower
     }
 
-    return (((int) *first_string_begin) - ((int) *second_string_begin));
+    return *first_string_begin - *second_string_begin;
 }
 
 int ReverseComparator(const void *first_string, const void *second_string)
@@ -319,6 +328,7 @@ void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparat
             --right;
         }
     }
+
     printf("%d\n", __LINE__);
     if (right > 0)
     {
@@ -337,9 +347,9 @@ void PrintText(FILE *file, Text *input_text)
     assert(file != nullptr);
     assert(input_text != nullptr);
 
-    for (size_t strings_index = 0; strings_index < input_text->lines_number; ++strings_index)
+    for (unsigned long long strings_index = 0; strings_index < input_text->lines_number; ++strings_index)
     {
-        for (size_t char_index = 0; char_index <= (input_text->lines)[strings_index].len; ++char_index)
+        for (unsigned long long char_index = 0; char_index <= (input_text->lines)[strings_index].len; ++char_index)
         {
             fputc(*((input_text->lines)[strings_index].str + char_index), file);
         }
