@@ -4,9 +4,13 @@
 #include <stdlib.h>
 #include <locale.h>
 
-const int SMALLER   = -1;                                              // means first string is lexicografically smaller than second
-const int BIGGER    =  1;                                              // means first string is lexicografically bigger  than second
-const char FILE_1[] = "Onegin.txt";
+#define test printf("%d\n", __LINE__);
+const int SMALLER = -1;                                              // means first string is lexicografically smaller than second
+const int BIGGER  =  1;                                              // means first string is lexicografically bigger  than second
+const char INPUT_FILE_1[]  = "Onegin.txt";
+const char INPUT_FILE_2[]  = "Hamlet.txt";
+const char OUTPUT_FILE_1[] = "Onegin_sorted.txt";
+const char OUTPUT_FILE_2[] = "Hamlet_sorted.txt";
 
 struct String
 {
@@ -23,11 +27,13 @@ struct Text
 };
 
 int TextInput(Text *input_text);
-char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size);
+char *GetTextFromFile(FILE *file, Text *input_text);
 size_t GetFileSize(FILE *file);
-struct String *PlacePointers(char *buffer, size_t lines_number);
+struct String *PlacePointers(Text *input_text);
 void Swap(void *value_1, void *value_2, size_t type_size);
 bool IsCyrillic(char letter);
+bool IsLatin(char letter);
+bool IsLetter(char letter);
 void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *));
 void PrintText(FILE *file, Text *input_text);
 void PrintBuffer(FILE *file, Text *input_text);
@@ -37,9 +43,9 @@ void FreeMemory(Text *input_text);
 
 int main(int argc, const char *argv[])
 {
-    setlocale(LC_ALL, "ru_RU.cp1251");
+    setlocale(LC_ALL, "RUS");
 
-    struct Text input_text = {0};
+    struct Text input_text = {0,0,0,0};
 
     if (TextInput(&input_text) == -1)
     {
@@ -47,7 +53,6 @@ int main(int argc, const char *argv[])
     }
 
     qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
-
     //QuickSort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
     FILE *output = fopen("Text_sorted.txt", "w");
     assert(output != nullptr);
@@ -55,7 +60,6 @@ int main(int argc, const char *argv[])
     fprintf(output, "Directly sorted text\n\n");
     PrintText(output, &input_text);
     fclose(output);
-
     //QuickSort(&input_text.lines, input_text.lines_number, sizeof(struct String), ReverseComparator);
     qsort(input_text.lines, input_text.lines_number, sizeof(struct String), ReverseComparator);
 
@@ -78,15 +82,16 @@ int TextInput(Text *input_text)
 {
     assert (input_text != nullptr);
 
-    FILE *input_from_file = fopen(FILE_1, "r");
+    FILE *input_from_file = fopen(INPUT_FILE_1, "r");
 
     if (input_from_file == nullptr)
     {
         printf("ERROR: file was not found");
         return -1;
     }
-    input_text->buffer = CreateBuffer(input_from_file, &input_text->lines_number, &input_text->file_size);
-    input_text->lines = PlacePointers(input_text->buffer, input_text->lines_number);
+
+    input_text->buffer = GetTextFromFile(input_from_file, input_text);
+    input_text->lines = PlacePointers(input_text);
 
     fclose(input_from_file);
 
@@ -96,25 +101,28 @@ int TextInput(Text *input_text)
 size_t GetFileSize(FILE *file)
 {
     fseek(file, 0, SEEK_END);
-    return ftell(file);
-}
-
-char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size)
-{
-    assert (file != nullptr);
-    assert (lines_number != nullptr);
-    assert (file_size != nullptr);
-
-    *file_size = GetFileSize(file) + 1;
+    size_t file_size = ftell(file);
     rewind(file);
 
-    char *buffer = (char*) calloc(*file_size, sizeof(char));
+    return file_size;
+}
 
-    *file_size = fread(buffer, sizeof(char), *file_size, file);
+char *GetTextFromFile(FILE *file, Text *input_text)
+{
+    assert (file != nullptr);
+    assert (input_text != nullptr);
+
+    input_text->file_size = GetFileSize(file) + 2;
+
+    char *buffer = (char*) calloc(input_text->file_size, sizeof(char));
+
+    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, file) + 2;
+
+    buffer[input_text->file_size - 2] = '\n';
 
     size_t string_counter = 0;
 
-    for (size_t checking_strings = 0; checking_strings < *file_size; ++checking_strings)
+    for (size_t checking_strings = 0; checking_strings < input_text->file_size; ++checking_strings)
     {
         if ((buffer[checking_strings]) == '\n')
         {
@@ -122,43 +130,33 @@ char *CreateBuffer(FILE *file, size_t *lines_number, size_t *file_size)
         }
     }
 
-    string_counter++;
-    *file_size -= string_counter;
-    *lines_number = string_counter;
-    *(buffer + *file_size) = '\0';
+    input_text->lines_number = string_counter;
+
+    buffer[input_text->file_size - 1] = '\0';
 
     return buffer;
 }
 
-String *PlacePointers(char *buffer, size_t lines_number)
+String *PlacePointers(Text *input_text)
 {
-    assert(buffer != nullptr);
+    assert(input_text != nullptr);
 
-    struct String *strings = (struct String *) calloc(lines_number, sizeof(struct String));
+    struct String *strings = (String *) calloc(input_text->lines_number, sizeof(String));
 
-    char *pointer_begin = buffer - 1;
-    char *pointer_end = buffer;
+    char *pointer_end = input_text->buffer;
     size_t counter = 0;
 
-
-    for (char *pointer_begin = buffer - 1; *pointer_begin != '\0'; ++pointer_begin)
-    while (*pointer_begin != '\0')
+    for (char *pointer_begin = input_text->buffer; *pointer_begin != '\0'; ++pointer_begin)
     {
-        ++pointer_begin;
-
-        while ((*pointer_begin != '\n') && (*pointer_begin != '\0'))
+        if (*pointer_begin == '\n')
         {
-            ++pointer_begin;
+            strings[counter].str = pointer_end;
+            strings[counter].len = pointer_begin - pointer_end;
+            pointer_end = pointer_begin + 1;
+
+            ++counter;
         }
-
-        (strings + counter)->str = pointer_end;
-        strings[counter].len = pointer_begin - pointer_end;
-
-        ++counter;
-        pointer_end = pointer_begin + 1;
     }
-
-    *pointer_begin = '\n';
 
     return strings;
 }
@@ -168,34 +166,31 @@ int DirectComparator(const void *first_string, const void *second_string)
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
 
-    char *first_string_begin  = (((struct String *) first_string) ->str);
-    char *second_string_begin = (((struct String *) second_string)->str);
+    char *first_string_begin  = (((String *) first_string) ->str);
+    char *second_string_begin = (((String *) second_string)->str);
 
-    while (!IsCyrillic(*first_string_begin)  && !isalpha(*first_string_begin)  && (*first_string_begin  != '\n'))
+    while ((*first_string_begin != '\n') && (*second_string_begin != '\n'))
     {
-        ++first_string_begin;
-    }
-
-    while (!IsCyrillic(*second_string_begin) && !isalpha(*second_string_begin) && (*second_string_begin != '\n'))
-    {
-
-        ++second_string_begin;
-    }
-
-    while ((*first_string_begin == *second_string_begin) && (*first_string_begin != '\n') && (*second_string_begin != '\n'))
-    {
-        ++first_string_begin;
-        ++second_string_begin;
-
-        while (!IsCyrillic(*first_string_begin)  && !isalpha(*first_string_begin)  && (*first_string_begin  != '\n'))
+        if (!IsLetter(*first_string_begin))
         {
             ++first_string_begin;
         }
 
-        while (!IsCyrillic(*second_string_begin) && !isalpha(*second_string_begin) && (*second_string_begin != '\n'))
+        if (!IsLetter(*second_string_begin))
         {
             ++second_string_begin;
-        }                    //tolower
+        }
+
+        if ((IsLetter(*first_string_begin)) && (IsLetter(*second_string_begin)) && (*first_string_begin == *second_string_begin))
+        {
+            ++first_string_begin;
+            ++second_string_begin;
+        }
+
+        if ((IsLetter(*first_string_begin)) && (IsLetter(*second_string_begin)) && (*first_string_begin != *second_string_begin))
+        {
+            break;
+        }
     }
 
     return *first_string_begin - *second_string_begin;
@@ -206,34 +201,32 @@ int ReverseComparator(const void *first_string, const void *second_string)
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
 
-    char *first_string_begin  = (((struct String *) first_string) ->str);
-    char *first_string_end    = (((struct String *) first_string) ->str) + (((struct String *) first_string) ->len) - 1;
-    char *second_string_begin = (((struct String *) second_string)->str);
-    char *second_string_end   = (((struct String *) second_string)->str) + (((struct String *) second_string)->len) - 1;
+    char *first_string_begin  = (((String *) first_string) ->str);
+    char *first_string_end    = (((String *) first_string) ->str) + (((String *) first_string) ->len) - 1;
+    char *second_string_begin = (((String *) second_string)->str);
+    char *second_string_end   = (((String *) second_string)->str) + (((String *) second_string)->len) - 1;
 
-    while (!IsCyrillic(*first_string_end)  && !isalpha(*first_string_end)  && (first_string_end  != first_string_begin))
+    while ((first_string_end != first_string_begin) && (second_string_end != second_string_begin))
     {
-        --first_string_end;
-    }
-
-    while (!IsCyrillic(*second_string_end) && !isalpha(*second_string_end) && (second_string_end != second_string_begin))
-    {
-        --second_string_end;
-    }
-
-    while ((*first_string_end == *second_string_end) && (first_string_end != first_string_begin) && (second_string_end != second_string_begin))
-    {
-        --first_string_end;
-        --second_string_end;
-
-        while (!IsCyrillic(*first_string_end)  && !isalpha(*first_string_end)  && (first_string_end  != first_string_begin))
+        if (!IsLetter(*first_string_end))
         {
             --first_string_end;
         }
 
-        while (!IsCyrillic(*second_string_end) && !isalpha(*second_string_end) && (second_string_end != second_string_begin))
+        if (!IsLetter(*second_string_end))
         {
             --second_string_end;
+        }
+
+        if ((IsLetter(*first_string_end)) && (IsLetter(*second_string_end)) && (*first_string_end == *second_string_end))
+        {
+            --first_string_end;
+            --second_string_end;
+        }
+
+        if ((IsLetter(*first_string_end)) && (IsLetter(*second_string_end)) && (*first_string_end != *second_string_end))
+        {
+            break;
         }
     }
 
@@ -243,25 +236,14 @@ int ReverseComparator(const void *first_string, const void *second_string)
         {
             return SMALLER;
         }
-        else
-        {
-            if (*first_string_end == *second_string_end)
-            {
-                return 0;
-            }
-            else
-            {
-                return (((int) *first_string_end) - ((int) *second_string_end));
-            }
-        }
     }
 
-    if (*second_string_end == *second_string_begin)
+    if (second_string_end == second_string_begin)
     {
         return BIGGER;
     }
 
-    return (((int) *first_string_end) - ((int) *second_string_end));
+    return *first_string_end - *second_string_end;
 }
 
 void Swap(void *value_1, void *value_2, size_t type_size)
@@ -294,9 +276,18 @@ void Swap(void *value_1, void *value_2, size_t type_size)
 
 bool IsCyrillic(char letter)
 {
-    return ((letter >= 'À') && (letter <= 'ÿ'));
+    return (((letter >= 'À') && (letter <= 'ß')) || ((letter >= 'à') && (letter <= 'ÿ')));
 }
 
+bool IsLatin(char letter)
+{
+    return (((letter >= 'A') && (letter <= 'Z')) || ((letter >= 'a') && (letter <= 'z')));
+}
+
+bool IsLetter(char letter)
+{
+    return ((IsCyrillic(letter)) || (IsLatin(letter)));
+}
 void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *))
 {
     assert(data != nullptr);
