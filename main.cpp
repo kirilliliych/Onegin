@@ -40,7 +40,7 @@ void PrintBuffer(FILE *file, Text *input_text);
 int DirectComparator(const void *first_string, const void *second_string);
 int ReverseComparator(const void *first_string, const void *second_string);
 void FreeMemory(Text *input_text);
-
+int sortingnumbers(const void *num1, const void *num2);
 int main(int argc, const char *argv[])
 {
     setlocale(LC_ALL, "RUS");
@@ -52,16 +52,28 @@ int main(int argc, const char *argv[])
         return -1;
     }
 
-    qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
-    //QuickSort(input_text.lines, input_text.lines_number, sizeof(struct String), DirectComparator);
+    QuickSort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
+    //qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
+    int mas[10] = {10,9,8,7,6,5,4,3,2,1};
+    /*int a = 5;
+    int b = 10;
+    Swap(&a, &b, sizeof(int));
+    printf("%d, %d\n", a, b);
+    */
+    /*QuickSort(mas, 10, sizeof(int), sortingnumbers);
+    for(int i = 0; i < 10; i++)
+    {
+        printf("%d ", mas[i]);
+    }
+    printf("\n"); */
     FILE *output = fopen("Text_sorted.txt", "w");
     assert(output != nullptr);
 
     fprintf(output, "Directly sorted text\n\n");
     PrintText(output, &input_text);
     fclose(output);
-    //QuickSort(&input_text.lines, input_text.lines_number, sizeof(struct String), ReverseComparator);
-    qsort(input_text.lines, input_text.lines_number, sizeof(struct String), ReverseComparator);
+    QuickSort(&input_text.lines, input_text.lines_number, sizeof(String), ReverseComparator);
+    //qsort(input_text.lines, input_text.lines_number, sizeof(String), ReverseComparator);
 
     output = fopen("Text_sorted.txt", "a");
     assert(output != nullptr);
@@ -171,6 +183,7 @@ int DirectComparator(const void *first_string, const void *second_string)
 
     while ((*first_string_begin != '\n') && (*second_string_begin != '\n'))
     {
+
         if (!IsLetter(*first_string_begin))
         {
             ++first_string_begin;
@@ -215,6 +228,7 @@ int ReverseComparator(const void *first_string, const void *second_string)
 
         if (!IsLetter(*second_string_end))
         {
+
             --second_string_end;
         }
 
@@ -261,16 +275,13 @@ void Swap(void *value_1, void *value_2, size_t type_size)
         *((unsigned long long *) value_2 + counter) = temp;
     }
 
-    if (counter * sizeof(unsigned long long) != type_size)
-    {
-        char byte = 0;
+    char byte = 0;
 
-        for (size_t element = 0; element < type_size - counter * sizeof(unsigned long long); ++element)
-        {
-            byte = *((char *) value_1 + counter + element);
-            *((char *) value_1 + counter + element) = *((char *) value_2 + counter + element);
-            *((char *) value_2 + counter + element) = byte;
-        }
+    for (size_t element = 0; element < type_size - counter * sizeof(unsigned long long); ++element)
+    {
+        byte = *((char *) value_1 + counter + element);
+        *((char *) value_1 + counter + element) = *((char *) value_2 + counter + element);
+        *((char *) value_2 + counter + element) = byte;
     }
 }
 
@@ -288,7 +299,7 @@ bool IsLetter(char letter)
 {
     return ((IsCyrillic(letter)) || (IsLatin(letter)));
 }
-void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *))
+/*void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparator)(const void *, const void *))
 {
     assert(data != nullptr);
     assert(comparator != nullptr);
@@ -296,43 +307,103 @@ void QuickSort(void *data, size_t lines_number, size_t type_size, int (*comparat
     size_t left = 0;
     size_t right = lines_number - 1;
     size_t middle_element_displacement = type_size * lines_number / 2;
-
+    printf("middle_element_displacement is: %d\n", middle_element_displacement / type_size);
     while (left <= right)
     {
 
-        printf("%d\n", __LINE__);
-        while (comparator(((char *) data + type_size * left),  ((char *) data + middle_element_displacement)) < 0)
+        while (comparator(((char *) data + type_size * left), ((char *) data + middle_element_displacement)) < 0)
         {
+            printf("left: %d\n", left);
             ++left;
         }
-        printf("%d\n", __LINE__);
+        printf("passed left\n");
         while (comparator(((char *) data + type_size * right), ((char *) data + middle_element_displacement)) > 0)
         {
+            printf("right: %d\n", right);
             --right;
         }
-        printf("%d\n", __LINE__);
+        printf("passed right\n");
         if (left <= right)
         {
             Swap(((char *) data + type_size * left), ((char *) data + type_size * right), type_size);
-
+            printf("swapped: %d, %d\n", *((int *)((char *) data + type_size * left)), *((int *)((char *) data + type_size * right)));
             ++left;
             --right;
         }
     }
 
-    printf("%d\n", __LINE__);
     if (right > 0)
     {
+        printf("worked\n");
+        printf("right_border: %d\n", right+1);
         QuickSort((char *) data, right + 1, type_size, comparator);
     }
 
-    if (left < lines_number)
+    if (left < lines_number - 1)
     {
+        printf("worked2\n");
         QuickSort(((char *) data + type_size * left), lines_number - left, type_size, comparator);
     }
-
 }
+*/
+int Partition (void *data, size_t left, size_t right, size_t type_size, int (*comparator)(const void *, const void *))
+{
+    size_t middle_element_displacement = (left + right) / 2;
 
+    //char middle_element = *((char *) data + type_size * (left + right) / 2);
+    while (left < right)
+    {
+        while (comparator(((char *) data + type_size * left),  ((char *) data + type_size * middle_element_displacement)) < 0)
+        {
+
+            ++left;
+            //printf("Left moved: %d\n", left);
+        }
+
+        while (comparator(((char *) data + type_size * right), ((char *) data + type_size * middle_element_displacement)) > 0)
+        {
+            --right;
+            //printf("Right moved: %d\n", right);
+        }
+        //test;
+        //printf("left: %d\n", left);
+        //printf("right: %d\n", right);
+
+        if (left >= right)
+        {
+            //test;
+            break;
+        }
+
+        if ((left == middle_element_displacement) || (right == middle_element_displacement))
+        {
+            middle_element_displacement = right + left - middle_element_displacement;
+        }
+
+        Swap(((char *) data + type_size * left), ((char *) data + type_size * right), type_size);
+
+        ++left;
+        --right;
+    }
+    printf("middle: %d\n", middle_element_displacement);
+    return middle_element_displacement;
+}
+void QuickSort(void *data, size_t elements_number, size_t type_size, int (*comparator)(const void *, const void *))
+{
+    printf("in: %d\n", elements_number);
+    size_t left = 0;
+    size_t right = elements_number - 1;
+
+    if ((left < right) && ((int) elements_number > 1))
+    {
+        size_t border = Partition(data, left, right, type_size, comparator);
+
+        printf("%d %d %d\n", elements_number, border - 1, elements_number - border);
+
+        QuickSort(((char *) data), border - 1, type_size, comparator);
+        QuickSort(((char *) data + type_size * border), elements_number - border - 1, type_size, comparator);
+    }
+}
 void PrintText(FILE *file, Text *input_text)
 {
     assert(file != nullptr);
@@ -363,4 +434,10 @@ void FreeMemory(struct Text *input_text)
     input_text->buffer = nullptr;
     input_text->lines =  nullptr;
 }
-
+int sortingnumbers(const void *num1, const void *num2)
+{
+    //printf("Num1 is: %d\n", *((int *)num1));
+    //printf("Num2 is: %d\n", *((int *)num2));
+    //printf("Result is: %d\n", *((int *)num1) - *((int *)num2));
+    return *((int *)num1) - *((int *)num2);
+}
