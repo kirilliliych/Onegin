@@ -46,14 +46,16 @@ int main(int argc, const char *argv[])
     setlocale(LC_ALL, "RUS");
 
     struct Text input_text = {0,0,0,0};
-
+    /*for(int i = 0; i < 256; i++)
+    {
+    printf("%d = %c\n", i, (char)i);
+    }*/
     if (TextInput(&input_text) == -1)
     {
         return -1;
     }
-
     QuickSort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
-    //qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
+    // qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
     int mas[10] = {10,9,8,7,6,5,4,3,2,1};
     /*int a = 5;
     int b = 10;
@@ -72,7 +74,7 @@ int main(int argc, const char *argv[])
     fprintf(output, "Directly sorted text\n\n");
     PrintText(output, &input_text);
     fclose(output);
-    QuickSort(&input_text.lines, input_text.lines_number, sizeof(String), ReverseComparator);
+    QuickSort(input_text.lines, input_text.lines_number, sizeof(String), ReverseComparator);
     //qsort(input_text.lines, input_text.lines_number, sizeof(String), ReverseComparator);
 
     output = fopen("Text_sorted.txt", "a");
@@ -228,7 +230,6 @@ int ReverseComparator(const void *first_string, const void *second_string)
 
         if (!IsLetter(*second_string_end))
         {
-
             --second_string_end;
         }
 
@@ -385,7 +386,7 @@ int Partition (void *data, size_t left, size_t right, size_t type_size, int (*co
         ++left;
         --right;
     }
-    printf("middle: %d\n", middle_element_displacement);
+    //printf("middle: %d\n", middle_element_displacement);
     return middle_element_displacement;
 }
 void QuickSort(void *data, size_t elements_number, size_t type_size, int (*comparator)(const void *, const void *))
@@ -399,6 +400,20 @@ void QuickSort(void *data, size_t elements_number, size_t type_size, int (*compa
         size_t border = Partition(data, left, right, type_size, comparator);
 
         printf("%d %d %d\n", elements_number, border - 1, elements_number - border);
+
+        char *first_pointer=(char *)data;
+        char *second_pointer;
+
+        /*for(int i = 0; i < elements_number; i++)
+        {
+            while(*second_pointer != '\n')
+            {
+                printf("%c", *second_pointer);
+            }
+            printf("\n");
+
+            first_pointer = (char *)data + type_size * i;
+        }*/
 
         QuickSort(((char *) data), border - 1, type_size, comparator);
         QuickSort(((char *) data + type_size * border), elements_number - border - 1, type_size, comparator);
@@ -432,7 +447,7 @@ void FreeMemory(struct Text *input_text)
     free(input_text->lines);
 
     input_text->buffer = nullptr;
-    input_text->lines =  nullptr;
+    input_text->lines  = nullptr;
 }
 int sortingnumbers(const void *num1, const void *num2)
 {
