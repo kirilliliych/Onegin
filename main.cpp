@@ -55,7 +55,7 @@ int main(int argc, const char *argv[])
         return -1;
     }
     QuickSort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
-    // qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
+    //qsort(input_text.lines, input_text.lines_number, sizeof(String), DirectComparator);
     int mas[10] = {10,9,8,7,6,5,4,3,2,1};
     /*int a = 5;
     int b = 10;
@@ -383,8 +383,6 @@ int Partition (void *data, size_t left, size_t right, size_t type_size, int (*co
 
         Swap(((char *) data + type_size * left), ((char *) data + type_size * right), type_size);
 
-        ++left;
-        --right;
     }
     //printf("middle: %d\n", middle_element_displacement);
     return middle_element_displacement;
@@ -401,19 +399,19 @@ void QuickSort(void *data, size_t elements_number, size_t type_size, int (*compa
 
         printf("%d %d %d\n", elements_number, border - 1, elements_number - border);
 
-        char *first_pointer=(char *)data;
-        char *second_pointer;
+        char *pointer;
 
-        /*for(int i = 0; i < elements_number; i++)
+        for(int i = 0; i < elements_number; i++)
         {
-            while(*second_pointer != '\n')
+            pointer = ((String *)data + i)->str;
+            while(*pointer != '\n')
             {
-                printf("%c", *second_pointer);
+                printf("%c", *pointer);
+                pointer++;
             }
             printf("\n");
 
-            first_pointer = (char *)data + type_size * i;
-        }*/
+        }
 
         QuickSort(((char *) data), border - 1, type_size, comparator);
         QuickSort(((char *) data + type_size * border), elements_number - border - 1, type_size, comparator);
