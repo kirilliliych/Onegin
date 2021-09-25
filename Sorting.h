@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <locale.h>
 
-/** Compares lines in lexicographic order from the beginning
+/** Compares lines in lexicographical order from the beginning
  *
  * @param [in] first_string  - pointer to the first  compared line
  * @param [in] second_string - pointer to the second compared line
@@ -26,7 +26,7 @@
  */
 int DirectComparator(const void *first_string, const void *second_string);
 
-/** Compares lines in lexicographic order from the end
+/** Compares lines in lexicographical order from the end
  *
  * @param [in] first_string  - pointer to the first  compared line
  * @param [in] second_string - pointer to the second compared line

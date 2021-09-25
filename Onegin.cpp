@@ -12,7 +12,7 @@ void HelpIfNeed(int args_num, const char **args)
 {
     assert(args != nullptr);
 
-    for (int check_args = 0; check_args < args_num; ++check_args)
+    for (int check_args = 1; check_args < args_num; ++check_args)
     {
         if (strcmp(args[check_args], "-help") == 0)
         {
@@ -24,6 +24,7 @@ void HelpIfNeed(int args_num, const char **args)
         }
     }
 }
+
 int GetFileName(Text *input_text)
 {
     assert(input_text != nullptr);
@@ -59,7 +60,10 @@ int TextInput(Text *input_text)
     }
 
     input_text->buffer = GetTextFromFile(input_text);
-    input_text->lines = PlacePointers(input_text);
+    printf("%d", __LINE__);
+    input_text->lines_number = CountStrings(input_text->buffer);
+    printf("%d", __LINE__);
+    input_text->lines  = PlacePointers(input_text);
 
     fclose(input_text->file_ptr);
 
@@ -79,36 +83,41 @@ char *GetTextFromFile(Text *input_text)
 {
     assert(input_text != nullptr);
 
-    input_text->file_size = GetFileSize(input_text->file_ptr) + 2;
+    input_text->file_size = GetFileSize(input_text->file_ptr) + 2;                                        //if there is only one string in file we need space for '\n' and '\0'
 
-    char *buffer = (char*) calloc(input_text->file_size, sizeof(char));
+    char *buffer = (char *) calloc(input_text->file_size, sizeof(char));
 
-    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, input_text->file_ptr) + 2;
+    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, input_text->file_ptr) + 2; //if there is only one string in file we need space for '\n' and '\0'
 
     buffer[input_text->file_size - 2] = '\n';
-
-    size_t string_counter = 0;
-
-    for (size_t checking_strings = 0; checking_strings < input_text->file_size; ++checking_strings)
-    {
-        if ((buffer[checking_strings]) == '\n')
-        {
-            ++string_counter;
-        }
-    }
-
-    input_text->lines_number = string_counter;
-
     buffer[input_text->file_size - 1] = '\0';
 
     return buffer;
+}
+
+int CountStrings(char *buffer)
+{
+    size_t string_counter = 0;
+    int checking_strings  = 0;
+
+    while (buffer[checking_strings] != '\0')
+    {
+        if (buffer[checking_strings] == '\n')
+        {
+            ++string_counter;
+        }
+
+        ++checking_strings;
+    }
+
+    return string_counter;
 }
 
 String *PlacePointers(Text *input_text)
 {
     assert(input_text != nullptr);
 
-    struct String *strings = (String *) calloc(input_text->lines_number, sizeof(String));
+    String *strings = (String *) calloc(input_text->lines_number, sizeof(String));
 
     char *pointer_end = input_text->buffer;
     size_t counter = 0;
@@ -131,6 +140,7 @@ String *PlacePointers(Text *input_text)
 bool IsCyrillic(char letter)
 {
     return (((letter >= 'À') && (letter <= 'ß')) || ((letter >= 'à') && (letter <= 'ÿ')));
+    return ((('À' <= letter) && (letter <= 'ß')) || ((letter >= 'à') && (letter <= 'ÿ')));
 }
 
 int ToLowerCyrillic(char letter)
@@ -139,8 +149,10 @@ int ToLowerCyrillic(char letter)
     {
         return letter + ('à' - 'À');
     }
-    else return letter;
-
+    else
+    {
+        return letter;
+    }
 }
 
 bool IsLatin(char letter)
@@ -173,22 +185,17 @@ void OutputCtor(Text *input_text, char *file_name_output)
 {
     strcpy(file_name_output, input_text->file_name);
 
-    int dot_checker = 0;
-    int counter = 0;
     const char *end_of_output = "_sorted.txt";
+    int dot_seeker = 0;
 
-    while (file_name_output[dot_checker] != '.')
+    while (file_name_output[dot_seeker] != '.')
     {
-        ++dot_checker;
+        ++dot_seeker;
     }
 
-    while (end_of_output[counter] != '\0')
-    {
-        file_name_output[dot_checker + counter] = end_of_output[counter];
-        ++counter;
-    }
+    file_name_output[dot_seeker] = '\0';
 
-    file_name_output[dot_checker + counter] = '\0';
+    strcat(file_name_output, end_of_output);
 }
 
 void PrintText(FILE *file, Text *input_text)

@@ -87,7 +87,7 @@ int GetFileName(Text *input_text);
 int TextInput(Text *input_text);
 
 /**
- *  Creates buffer and fills it with text, counts number of lines in it
+ *  Creates buffer and fills it with text
  *
  *  @param [out] input_text - pointer to text struct
  *
@@ -105,6 +105,15 @@ char *GetTextFromFile(Text *input_text);
  *
  */
 size_t GetFileSize(FILE *file);
+
+/**
+ *  Counts how many strings are there in text
+ *
+ *  @param buffer - pointer to buffer with a text
+ *
+ *  @return number of strings in text
+ */
+int CountStrings(char *buffer);
 
 /**
  *  Places a pointer in the buffer at the beginning of each line in the text. Also counts the length of these lines

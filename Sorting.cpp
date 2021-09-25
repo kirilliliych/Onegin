@@ -233,7 +233,7 @@ void QuickSort(void *data, size_t elements_number, size_t type_size,
     assert(data != nullptr);
     assert(comparator != nullptr);
 
-    if ((int) elements_number > 1)
+    if (elements_number > 1)
     {
         size_t border = Partition(data, elements_number, type_size, comparator);
 

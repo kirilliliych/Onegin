@@ -15,7 +15,7 @@ int main(int argc, const char *argv[])
 
     HelpIfNeed(argc, argv);
 
-    struct Text input_text = {};
+    Text input_text = {};
     int number_of_files = 0;
 
     printf("Enter how many files you want to sort: ");
@@ -23,13 +23,13 @@ int main(int argc, const char *argv[])
 
     while (number_of_files < 1)
     {
-        printf("ERROR, number of files must be more than 1\n");
+        printf("ERROR, number of files must be more than 0\n");
 
         printf("Enter how many files you want to sort: ");
         scanf("%d", &number_of_files);
     }
 
-    while(number_of_files > 0)
+    while (number_of_files > 0)
     {
         if (TextInput(&input_text) == INPUT_ERROR)
         {
