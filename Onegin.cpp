@@ -216,12 +216,22 @@ void PrintBuffer(FILE *file, Text *input_text)
 void SortAndPrint(Text *input_text, int (comparator)(const void *, const void *),
                  void (sorting_function)(void *data, size_t number_of_elements,
                  size_t type_size, int (comparator)(const void *, const void *)),
-                 void (output_function)(FILE* file, Text *text), const char *file_name_output,
-                 const char *mode, const char *message)
+                 void (output_function)(FILE* file, Text *text),
+                 const char *file_name_output, const char *mode, const char *message)
 {
     sorting_function(input_text->lines, input_text->lines_number, sizeof(*(input_text->lines)), comparator);
 
-    FILE* output = fopen(file_name_output, mode);
+    FILE *output = nullptr;
+
+    if (strcmp(mode, "w") == 0)
+    {
+        output = fopen(file_name_output, "w");
+    }
+    else if (strcmp(mode, "a") == 0)
+    {
+        output = fopen(file_name_output, "a");
+    }
+
     assert(output != nullptr);
 
     fprintf(output, message);

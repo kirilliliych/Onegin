@@ -39,7 +39,7 @@ int main(int argc, const char *argv[])
         char file_name_output[MAX_NAME_SIZE] = "";
         OutputCtor(&input_text, file_name_output);
 
-        const char *mode = "r";
+        const char *mode = "w";
 
         char message_1[] = "Directly sorted text\n\n";
         SortAndPrint(&input_text, DirectComparator, qsort, PrintText, file_name_output, mode, message_1);
