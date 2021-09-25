@@ -8,22 +8,60 @@
 
 #include "Onegin.h"
 
+void HelpIfNeed(int args_num, const char **args)
+{
+    assert(args != nullptr);
+
+    for (int check_args = 0; check_args < args_num; ++check_args)
+    {
+        if (strcmp(args[check_args], "-help") == 0)
+        {
+            printf("This is a text sorter.\n\n"
+                   "Sorts the given file in lexicographical order.\n"
+                   "First from the beginning, than from the end.\n"
+                   "Both variants are put in one file, after that"
+                   " the original text is put there as well.\n\n");
+        }
+    }
+}
+int GetFileName(Text *input_text)
+{
+    assert(input_text != nullptr);
+
+    printf("Enter name of file you want to sort with its extension: ");
+
+    if (!scanf("%256s", input_text->file_name))
+    {
+        return CHECK_FAILED;
+    }
+    else
+    {
+        return CHECK_OK;
+    }
+}
+
 int TextInput(Text *input_text)
 {
     assert(input_text != nullptr);
 
-    FILE *input_from_file = fopen(INPUT_FILE_1, "r");
-
-    if (input_from_file == nullptr)
+    if (GetFileName(input_text) == CHECK_FAILED)
     {
-        printf("ERROR: file was not found");
-        return -1;
+        printf("ERROR int TextInput(): file name was not input\n");
+        return INPUT_ERROR;
     }
 
-    input_text->buffer = GetTextFromFile(input_from_file, input_text);
+    input_text->file_ptr = fopen(input_text->file_name, "r");
+
+    if (input_text->file_ptr == NULL)
+    {
+        printf("ERROR int TextInput(): file was not found");
+        return INPUT_ERROR;
+    }
+
+    input_text->buffer = GetTextFromFile(input_text);
     input_text->lines = PlacePointers(input_text);
 
-    fclose(input_from_file);
+    fclose(input_text->file_ptr);
 
     return 0;
 }
@@ -37,16 +75,15 @@ size_t GetFileSize(FILE *file)
     return file_size;
 }
 
-char *GetTextFromFile(FILE *file, Text *input_text)
+char *GetTextFromFile(Text *input_text)
 {
-    assert(file != nullptr);
     assert(input_text != nullptr);
 
-    input_text->file_size = GetFileSize(file) + 2;
+    input_text->file_size = GetFileSize(input_text->file_ptr) + 2;
 
     char *buffer = (char*) calloc(input_text->file_size, sizeof(char));
 
-    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, file) + 2;
+    input_text->file_size = fread(buffer, sizeof(char), input_text->file_size, input_text->file_ptr) + 2;
 
     buffer[input_text->file_size - 2] = '\n';
 
@@ -100,7 +137,7 @@ int ToLowerCyrillic(char letter)
 {
     if ((letter >= 'À') && (letter <= 'ß'))
     {
-        return letter + 32;
+        return letter + ('à' - 'À');
     }
     else return letter;
 
@@ -117,16 +154,41 @@ int ToLower(char letter)
     {
         return tolower(letter);
     }
-
-    if (IsCyrillic(letter))
+    else if (IsCyrillic(letter))
     {
         return ToLowerCyrillic(letter);
+    }
+    else
+    {
+        return letter;
     }
 }
 
 bool IsLetter(char letter)
 {
     return ((IsCyrillic(letter)) || (IsLatin(letter)));
+}
+
+void OutputCtor(Text *input_text, char *file_name_output)
+{
+    strcpy(file_name_output, input_text->file_name);
+
+    int dot_checker = 0;
+    int counter = 0;
+    const char *end_of_output = "_sorted.txt";
+
+    while (file_name_output[dot_checker] != '.')
+    {
+        ++dot_checker;
+    }
+
+    while (end_of_output[counter] != '\0')
+    {
+        file_name_output[dot_checker + counter] = end_of_output[counter];
+        ++counter;
+    }
+
+    file_name_output[dot_checker + counter] = '\0';
 }
 
 void PrintText(FILE *file, Text *input_text)
@@ -154,12 +216,13 @@ void PrintBuffer(FILE *file, Text *input_text)
 void SortAndPrint(Text *input_text, int (comparator)(const void *, const void *),
                  void (sorting_function)(void *data, size_t number_of_elements,
                  size_t type_size, int (comparator)(const void *, const void *)),
-                 void (output_function)(FILE* file, Text *text), char message[])
+                 void (output_function)(FILE* file, Text *text), const char *file_name_output,
+                 const char *mode, const char *message)
 {
     sorting_function(input_text->lines, input_text->lines_number, sizeof(*(input_text->lines)), comparator);
 
-    FILE* output = fopen("Text_sorted.txt", "a+");
-    assert(output != NULL);
+    FILE* output = fopen(file_name_output, mode);
+    assert(output != nullptr);
 
     fprintf(output, message);
     output_function(output, input_text);

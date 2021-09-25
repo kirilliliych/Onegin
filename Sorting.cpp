@@ -7,6 +7,7 @@
 // -------------------------------------------------------
 
 #include "Sorting.h"
+#include "Onegin.h"
 
 int DirectComparator(const void *first_string, const void *second_string)
 {
@@ -46,17 +47,17 @@ int DirectComparator(const void *first_string, const void *second_string)
     return *first_string_begin - *second_string_begin;
 }
 
-int ReverseComparator(const void *first_string, const void *second_string)
+/*int ReverseComparator(const void *first_string, const void *second_string)
 {
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
 
-    String *first =  (String *) first_string;
-    String *second = (String *) second_string;
+    const String *first =  (const String *) first_string;
+    const String *second = (const String *) second_string;
 
     size_t minlen = (first->len > second->len) ? second->len : first->len;
 
-    for (int checking_strings = 1; checking_strings < minlen; ++checking_strings)
+    for (size_t checking_strings = 1; checking_strings < minlen; ++checking_strings)
     {
         if (ToLower(first->str[first->len - checking_strings]) > ToLower(second->str[second->len - checking_strings]))
         {
@@ -70,13 +71,14 @@ int ReverseComparator(const void *first_string, const void *second_string)
 
     if (first->len == second->len)
     {
-        return 0;
+        return EQUAL;
     }
 
     return (first->len > second->len) ? BIGGER : SMALLER;
 }
+*/
 
-/*int ReverseComparator(const void *first_string, const void *second_string)
+int ReverseComparator(const void *first_string, const void *second_string)
 {
     assert(first_string  != nullptr);
     assert(second_string != nullptr);
@@ -121,11 +123,13 @@ int ReverseComparator(const void *first_string, const void *second_string)
                 {
                     return SMALLER;
                 }
+
+                --second_string_end;
             }
 
             if (*first_string_end == *second_string_end)
             {
-                return 0;
+                return EQUAL;
             }
         }
     }
@@ -140,18 +144,20 @@ int ReverseComparator(const void *first_string, const void *second_string)
                 {
                     return BIGGER;
                 }
+
+                --first_string_end;
             }
 
             if (*first_string_end == *second_string_end)
             {
-                return 0;
+                return EQUAL;
             }
         }
     }
 
     return *first_string_end - *second_string_end;
 }
- */
+
 
 void Swap(void *value_1, void *value_2, size_t type_size)
 {

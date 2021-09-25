@@ -6,6 +6,15 @@
 //! @copyright Copyright (c) 2021
 // -------------------------------------------------------
 
+#ifndef SORTING_H
+#define SORTING_H
+
+#include <assert.h>
+#include <cstring>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
 
 /** Compares lines in lexicographic order from the beginning
  *
@@ -22,7 +31,7 @@ int DirectComparator(const void *first_string, const void *second_string);
  * @param [in] first_string  - pointer to the first  compared line
  * @param [in] second_string - pointer to the second compared line
  *
- * @return Number < 0 if first line is smaller, 0 if they are equal and > 0 if first line is bigger
+ * @return SMALLER if first line is smaller, EQUAL if they are equal and BIGGER if first line is bigger
  *
  */
 int ReverseComparator(const void *first_string, const void *second_string);
@@ -59,3 +68,5 @@ int Partition(void *data, size_t elements_number, size_t type_size,
  */
 void QuickSort(void *data, size_t elements_number, size_t type_size,
                int (*comparator)(const void *, const void *));
+
+#endif
