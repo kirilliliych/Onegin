@@ -3,15 +3,15 @@ The program is free-to-use for all kinds of developers.
 
 ***
 ## What does the project do
-Sorts text from the file in lexicographical order from the beginning and from the end and then inputs both sorted variants and the original text to another file.
+Sorts text from the file in both ascending and decsending lexicographical order and then outputs results and original text to the file `Text_sorted.txt`.
 
 ***
 ## Why is the project useful
-Sometimes we need to sort some text in lexicographical order, so this programm does this.
+Sorting some lines of text might be quite handy sometimes!
 
 ***
 ## How to launch
-This program should be launched by cmd.
+This program should be launched in cmd.
 
 ```
    $ g++ main.cpp Onegin.cpp Sorting.cpp -o main.exe
