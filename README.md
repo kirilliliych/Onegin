@@ -13,7 +13,7 @@ Sometimes we need to sort some text in lexicographical order, so this programm d
 ## How to launch
 This program should be launched by cmd.
 
-```$ g++.exe main.cpp Onegin.cpp Sorting.cpp -o main.exe
+```$ g++ main.cpp Onegin.cpp Sorting.cpp -o main.exe
    $ main.exe  
 ```
 Then just follow the instructions of the program.
