@@ -42,7 +42,7 @@ int main(int argc, const char *argv[])
         const char *mode = "w";
 
         char message_1[] = "Directly sorted text\n\n";
-        SortAndPrint(&input_text, DirectComparator, qsort, PrintText, file_name_output, mode, message_1);
+        SortAndPrint(&input_text, DirectComparator, QuickSort, PrintText, file_name_output, mode, message_1);
 
         mode = "a";
 
